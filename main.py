@@ -202,12 +202,30 @@ def recover_if_broken() -> None:
             st.session_state.mode = "home"
 
 
-def handle_submit(user_q: int, user_r: int) -> None:
+def handle_submit(user_q_raw, user_r_raw) -> None:
     idx = st.session_state.q_index
     questions: List[DivisionProblem] = st.session_state.questions
+
+    # Guard
+    if idx < 0 or idx >= len(questions):
+        st.session_state.mode = "home"
+        return
+
     current = questions[idx]
 
+    # Force clean ints (handles float-like values safely)
+    try:
+        user_q = int(user_q_raw)
+        user_r = int(user_r_raw)
+    except (TypeError, ValueError):
+        st.session_state.last_toast = "Please enter valid whole numbers."
+        return
+
     # remainder constraint
+    if user_r < 0:
+        st.session_state.last_toast = "Remainder can’t be negative."
+        return
+
     if user_r >= current.divisor:
         st.session_state.last_toast = f"Remainder must be < {current.divisor}. Try again"
         return
@@ -215,6 +233,7 @@ def handle_submit(user_q: int, user_r: int) -> None:
     st.session_state.answered_count += 1
 
     is_correct = (user_q == current.quotient) and (user_r == current.remainder)
+
     if is_correct:
         st.session_state.correct_count += 1
         st.session_state.last_toast = "Correct"
@@ -227,7 +246,6 @@ def handle_submit(user_q: int, user_r: int) -> None:
     if st.session_state.q_index >= TOTAL_QUESTIONS:
         st.session_state.elapsed_time = time.perf_counter() - st.session_state.start_time
         st.session_state.mode = "results"
-
 
 # =========================
 # UI
@@ -318,21 +336,32 @@ elif st.session_state.mode == "playing":
 
     st.markdown(f"## {current.text}")
 
-    # Form = ENTER submits
-    with st.form(key=f"answer_form_{idx}", clear_on_submit=True):
-        col1, col2 = st.columns(2)
-        with col1:
-            user_q = st.number_input("Quotient", min_value=0, step=1, value=0)
-        with col2:
-            user_r = st.number_input("Remainder", min_value=0, step=1, value=0)
+with st.form(key=f"answer_form_{idx}", clear_on_submit=True):
+    col1, col2 = st.columns(2)
 
-        submitted = st.form_submit_button("Submit (Enter)")
+    with col1:
+        user_q = st.number_input(
+            "Quotient",
+            min_value=0,
+            step=1,
+            value=0,
+            key=f"q_input_{idx}",   # IMPORTANT: unique per question
+        )
 
-        if submitted:
-            handle_submit(int(user_q), int(user_r))
-            st.rerun()
+    with col2:
+        user_r = st.number_input(
+            "Remainder",
+            min_value=0,
+            step=1,
+            value=0,
+            key=f"r_input_{idx}",   # IMPORTANT: unique per question
+        )
 
-    st.caption("Tip: remainder must be smaller than the divisor.")
+    submitted = st.form_submit_button("Submit (Enter)")
+
+    if submitted:
+        handle_submit(user_q, user_r)
+        st.rerun()
 
 
 # -------------------------
