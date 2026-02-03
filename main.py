@@ -23,7 +23,7 @@ DIVISOR_MIN = 2
 DIVISOR_MAX = 12
 
 QUOTIENT_MIN = 2
-QUOTIENT_MAX = 50
+QUOTIENT_MAX = 12
 
 ACCURACY_EPSILON = 0.01  # floor to avoid division-by-zero
 
@@ -209,7 +209,7 @@ def handle_submit(user_q: int, user_r: int) -> None:
 
     # remainder constraint
     if user_r >= current.divisor:
-        st.session_state.last_toast = f"Remainder must be < {current.divisor}. Try again 💀"
+        st.session_state.last_toast = f"Remainder must be < {current.divisor}. Try again"
         return
 
     st.session_state.answered_count += 1
@@ -217,9 +217,9 @@ def handle_submit(user_q: int, user_r: int) -> None:
     is_correct = (user_q == current.quotient) and (user_r == current.remainder)
     if is_correct:
         st.session_state.correct_count += 1
-        st.session_state.last_toast = "Correct ✅🔥"
+        st.session_state.last_toast = "Correct"
     else:
-        st.session_state.last_toast = f"Incorrect 😭 Correct was {current.quotient} r {current.remainder}"
+        st.session_state.last_toast = f"Incorrect - Correct was {current.quotient} r {current.remainder}"
 
     # advance
     st.session_state.q_index += 1
@@ -241,7 +241,7 @@ update_timer()
 # Sidebar controls (always visible)
 with st.sidebar:
     st.markdown("### Controls")
-    if st.button("🧨 Reset app (fix blank page)", use_container_width=True):
+    if st.button("Reset app (fix blank page)", use_container_width=True):
         hard_reset_state()
         st.rerun()
 
@@ -252,7 +252,7 @@ with st.sidebar:
     st.write("questions:", len(st.session_state.questions))
 
 st.title("➗ Division Practice (Quotient + Remainder)")
-st.caption("Press **Enter** to submit. Lower score = better 🙏🔥")
+st.caption("Press **Enter** to submit. Lower score = better")
 
 # Toast once per rerun
 if st.session_state.last_toast:
@@ -276,7 +276,7 @@ st.divider()
 # HOME (landing page)
 # -------------------------
 if st.session_state.mode == "home":
-    st.subheader("Landing page ✅ (this should never be blank now)")
+    st.subheader("Landing page(this should never be blank now)")
     st.write(
         "Rules:\n"
         "- 15 questions\n"
@@ -287,7 +287,7 @@ if st.session_state.mode == "home":
 
     c1, c2 = st.columns(2)
     with c1:
-        if st.button("🚀 Start game", use_container_width=True):
+        if st.button("Start game", use_container_width=True):
             start_new_game()
             st.rerun()
     with c2:
@@ -297,9 +297,9 @@ if st.session_state.mode == "home":
 
     st.markdown("#### Scoring (cause → effect)")
     st.write(
-        "- Accuracy ↑ → (1/accuracy)² ↓ → score ↓ ✅\n"
-        "- Time ↑ → score ↑ 😭\n"
-        "- Accuracy = 0 → clamped to 1% so your score doesn’t explode to infinity 💀\n"
+        "- Accuracy ↑ → (1/accuracy)² → score \n"
+        "- Time ↑ → score ↑ \n"
+        "- Accuracy = 0 → clamped to 1% so your score doesn’t explode to infinity\n"
     )
 
 
@@ -326,7 +326,7 @@ elif st.session_state.mode == "playing":
         with col2:
             user_r = st.number_input("Remainder", min_value=0, step=1, value=0)
 
-        submitted = st.form_submit_button("✅ Submit (Enter)")
+        submitted = st.form_submit_button("Submit (Enter)")
 
         if submitted:
             handle_submit(int(user_q), int(user_r))
@@ -346,7 +346,7 @@ elif st.session_state.mode == "results":
     accuracy = compute_accuracy(correct, total)
     score = compute_score(accuracy, time_taken)
 
-    st.subheader("Results 🧾")
+    st.subheader("Results")
     r1, r2, r3 = st.columns(3)
     r1.metric("Accuracy", f"{accuracy*100:.1f}%")
     r2.metric("Time", f"{time_taken:.2f}s")
@@ -361,7 +361,7 @@ elif st.session_state.mode == "results":
         percentile = percentile_lower_is_better(all_scores, score)
 
         if saved:
-            st.success("Saved to Supabase ✅")
+            st.success("Saved to Supabase")
         else:
             st.warning("Couldn’t save to Supabase (RLS/policies/credentials).")
 
@@ -371,10 +371,10 @@ elif st.session_state.mode == "results":
 
     c1, c2 = st.columns(2)
     with c1:
-        if st.button("🔁 Play again", use_container_width=True):
+        if st.button("Play again", use_container_width=True):
             start_new_game()
             st.rerun()
     with c2:
-        if st.button("🏠 Home", use_container_width=True):
+        if st.button("Home", use_container_width=True):
             st.session_state.mode = "home"
             st.rerun()
